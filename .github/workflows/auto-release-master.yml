@@ -1,0 +1,41 @@
+on:
+  push:
+    branches:
+      - master
+
+name: Auto Release
+
+jobs:
+  build:
+    name: Create Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@master
+      - name: Git Semantic Version
+        id: semantic_version
+        uses: PaulHatch/semantic-version@v1.0.1
+        env:
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+        with:
+          branch: "master"
+          tag_prefix: "v"
+          # major_pattern: # default is (MAJOR)
+          # minor_pattern: # default is (MINOR)
+          format: "v${major}.${minor}.${patch}"
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+        with:
+          tag_name: ${{ steps.semantic_version.outputs.version }}
+          release_name: Release ${{ steps.semantic_version.outputs.version }}
+          body: | 
+            Automatically released due to commit, config in /.githubu/workflows/auto-release-master.yml
+            Version ${{ steps.semantic_version.outputs.version }} generated.
+            Github ref: ${{ github.ref }}
+          draft: false
+          prerelease: false
+          
+        
